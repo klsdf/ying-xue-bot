@@ -1,0 +1,93 @@
+plugins:
+  group:server:
+    server:dugye2:
+      port: 5140
+      maxPort: 5149
+    ~server-satori:jllgoj: {}
+    ~server-temp:3xndfx: {}
+  group:basic:
+    ~admin:0b9bkl: {}
+    ~bind:foy0os: {}
+    commands:mk0cwc: {}
+    help:pilz1y: {}
+    http:ufl6m2: {}
+    ~inspect:uuzbht: {}
+    locales:v8s6p7: {}
+    proxy-agent:cmq5rb: {}
+    rate-limit:jib5zw: {}
+    telemetry:9vzjh1: {}
+  group:console:
+    actions:yjzdt5: {}
+    analytics:ya9n0i: {}
+    android:kd2bux:
+      $if: env.KOISHI_AGENT?.includes('Android')
+    ~auth:ojyrof: {}
+    config:cgt4x1: {}
+    console:j572il:
+      open: true
+    dataview:98ifcs: {}
+    desktop:e53j3j:
+      $if: env.KOISHI_AGENT?.includes('Desktop')
+    explorer:bi1xq4: {}
+    logger:pehv1o: {}
+    insight:45vhvc: {}
+    market:5096lb:
+      search:
+        endpoint: https://registry.koishi.chat/index.json
+    notifier:bq3rac: {}
+    oobe:qgppda: {}
+    sandbox:h1jurh: {}
+    status:9zk1h4: {}
+    theme-vanilla:v1ady6: {}
+  group:storage:
+    ~database-mongo:lr2a0y:
+      database: koishi
+    ~database-mysql:yox0ik:
+      database: koishi
+    ~database-postgres:gk6829:
+      database: koishi
+    database-sqlite:3njtm1:
+      path: data/koishi.db
+    assets-local:j8f2pg: {}
+  group:adapter:
+    ~adapter-dingtalk:uiibku: {}
+    ~adapter-discord:hrbgjn: {}
+    ~adapter-kook:3netu5: {}
+    ~adapter-lark:8ptwt0: {}
+    ~adapter-line:y98208: {}
+    ~adapter-mail:w2y4gb: {}
+    ~adapter-matrix:bnwvgb: {}
+    adapter-qq:9bmb6c:
+      id: '102694984'
+      secret: 19HPYhqz8HQaku4EOZkv6HSeq2EQcp2F
+      token: 5ASBGxt3bdyQcCOHE4HfjtLefZj6Fc3J
+      type: private
+      sandbox: true
+      intents:
+        - GUILDS
+        - GUILD_MEMBERS
+        - GUILD_MESSAGE_REACTIONS
+        - DIRECT_MESSAGES
+        - OPEN_FORUMS_EVENT
+        - AUDIO_OR_LIVE_CHANNEL_MEMBER
+        - USER_MESSAGE
+        - INTERACTIONS
+        - MESSAGE_AUDIT
+        - AUDIO_ACTION
+        - PUBLIC_GUILD_MESSAGES
+    ~adapter-satori:aocyp9: {}
+    ~adapter-slack:giuu7r: {}
+    ~adapter-telegram:4z6zcs: {}
+    ~adapter-wechat-official:z9h5kb: {}
+    ~adapter-wecom:2vfkju: {}
+    ~adapter-whatsapp:kpzcbk: {}
+    ~adapter-zulip:5jw9bh: {}
+  group:develop:
+    $if: env.NODE_ENV === 'development'
+    hmr:2zgief:
+      root: .
+  advanced-echo:x5r6ta:
+    template:
+      - 回应：%%message%%
+  ~advanced-echo:umqsq1: {}
+  yingxue-core:830jit: {}
