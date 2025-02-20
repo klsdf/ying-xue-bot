@@ -1,19 +1,49 @@
-import { Session } from 'inspector/promises'
 import { Context, Schema, h } from 'koishi'
 import { pathToFileURL } from 'url'
 import path from 'path'
+
+import { } from 'koishi-plugin-puppeteer'   //用于图形化
+import { createHtml } from './html-creator'
+
+
+
+interface GameData {
+  id: number
+  name: string
+  // 其他字段...
+}
+declare module 'koishi' {
+  interface Tables {
+    gamedata: GameData
+  }
+}
+
+
+
 export const name = 'yingxue-core'
 
 export interface Config { }
 
 export const Config: Schema<Config> = Schema.object({})
 
+export const inject = ['puppeteer']
+export const usage = "用于游戏学知识的机器人"
+
+
+
+
 export function apply(ctx: Context) {
+  // 使用插件
+  // applyCron(ctx)
+
+
   // write your plugin here
   ctx.command('你好')
     .action(async ({ session }) => {
       return '你好主人，最爱你了！'
     })
+
+
 
   ctx.on('message', (session) => {
     if (session.content.includes('男娘')) {
@@ -26,6 +56,50 @@ export function apply(ctx: Context) {
   })
   ctx.command('对话次数检测').action(async (Argv) => {
     return `对话次数:${getCallTime(Argv.session.userId)}`
+  })
+
+  // ctx.command('多参数测试 <name> <age> <gender>').action(async (Argv, name, age, gender) => {
+  //   return `姓名:${name} 年龄:${age} 性别:${gender}`
+  // })
+
+  ctx.command('回复测试').action(async ({ session }) => {
+    session.send(`用户id: ${session.userId} `)
+    session.send(`消息id: ${session.messageId} `)
+    // Argv.session.send('欢迎 ' + h('at', { id: Argv.session.userId }) + ' 入群！')
+    // Argv.session.send('我正在 ' + h('quote', {id: Argv.session.messageId }) + ' 回复你')
+    return ""
+  })
+  const testChannelId = "541042950825E06BFC0DC7698D84A86D"
+  const myId = "90455E4B9AC248C2DE4BE5388C58495B"
+
+  const 雌小鬼Id = "24CC4328F64BB168175B99C247D3283C"
+
+  ctx.on("message", (session) => {
+    if (session.content.includes("亲亲")) {
+
+      if (session.userId === myId) {
+        session.send("检测到主人说话！亲亲！")
+      } else if (session.userId === 雌小鬼Id) {
+        session.send("不许亲亲！只有主人可以亲亲！打你！")
+      } else {
+        session.send("不许亲亲！只有主人可以亲亲！")
+      }
+    }
+  })
+
+
+
+  ctx.command('广播测试').action(async ({ session }) => {
+    let channelId = session.channelId;
+    console.log("channelId", channelId);
+    try {
+      await session.bot.broadcast([testChannelId], `收到来自${session.userId}的广播测试`);
+      return "广播测试成功"
+    } catch (error) {
+      console.log("广播测试失败", error);
+      return "广播测试失败，因为\n" + error
+    }
+
   })
 
 
@@ -52,7 +126,7 @@ export function apply(ctx: Context) {
     }
 
   })
- 
+
   ctx.command("字符串测试")
     .action(async (Argv) => {
       await Argv.session.send("请输入字符串")
@@ -115,8 +189,69 @@ export function apply(ctx: Context) {
     })
 
 
-}
+  ctx.command("图形化测试")
+    .action(async (Argv) => {
+      // console.log(createHtml())
+      const img = await ctx.puppeteer.render(createHtml())
 
+      return img
+    })
+
+  // // 定时任务：每分钟发送一条测试消息
+  // ctx.cron('*/1 * * * *', () => {
+  //   ctx.broadcast('这是一个测试消息') // 使用广播功能发送消息
+  //   console.log("定时任务")
+  // })
+
+  ctx.model.extend('gamedata', {
+    id: 'unsigned',
+    name: 'string',
+    // 其他字段定义...
+  })
+
+  // 创建新的用户数据
+  const newGameData: GameData = {
+    id: 1,
+    name: '萤雪',
+    // 其他字段的值...
+  }
+
+
+
+  ctx.command('数据库测试')
+    .action(async ({ session }) => {
+      // 插入用户数据到 users 表中
+      // await ctx.database.create('gamedata', newGameData)
+
+      const data = await ctx.database.get('gamedata', { id: 1 })
+      console.log(`数据库测试成功: id:${data[0].id} name:${data[0].name}`)
+      session.send(`数据库测试成功: id:${data[0].id} name:${data[0].name}`)
+
+      return ``
+    })
+
+  ctx.middleware((session, next) => {
+    console.log(`${session.userId}说了:${session.content}`)
+    return next()
+  })
+
+  // ctx.user('1796655849').on('message', (session) => {
+  //   console.log(session.content)
+  //   if (session.content.includes('喜欢你')) {
+  //     return '主人，最爱你了！'
+  //   }
+  // })
+
+  // ctx.command('get <key>', '获取一个键的值')
+  //   .action(async ({ session }, key) => {
+  //     const data = await ctx.database.get('data', { key })
+  //     if (data.length) {
+  //       return `值为：${data[0].value}`
+  //     } else {
+  //       return '未找到该键'
+  //     }
+  //   })
+}
 
 
 const callList = {};
@@ -127,3 +262,10 @@ function getCallTime(userId: string) {
   callList[userId]++
   return callList[userId]
 }
+
+
+
+
+
+//TODO
+// 1.随机猫猫图

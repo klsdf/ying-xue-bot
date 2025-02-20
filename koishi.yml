@@ -11,7 +11,7 @@ plugins:
     commands:mk0cwc: {}
     help:pilz1y: {}
     http:ufl6m2: {}
-    ~inspect:uuzbht: {}
+    inspect:uuzbht: {}
     locales:v8s6p7: {}
     proxy-agent:cmq5rb: {}
     rate-limit:jib5zw: {}
@@ -91,3 +91,5 @@ plugins:
       - 回应：%%message%%
   ~advanced-echo:umqsq1: {}
   yingxue-core:830jit: {}
+  cron:bxf8gn: {}
+  puppeteer:ngihuq: {}

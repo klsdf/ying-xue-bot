@@ -1,7 +1,10 @@
 lib
 dist
 /cache
-/data
+
+/data/local
+/data/logs
+
 !data/assets/
 /temp
 
@@ -30,3 +33,5 @@ tsconfig.tsbuildinfo
 *.ntvs*
 *.njsproj
 *.sln
+data/telemetry.json
+data/koishi.db

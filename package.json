@@ -86,6 +86,7 @@
     "koishi-plugin-advanced-echo": "1.0.0",
     "koishi-plugin-android": "^0.0.1",
     "koishi-plugin-assets-local": "^3.3.2",
+    "koishi-plugin-cron": "3.1.0",
     "koishi-plugin-dataview": "^2.6.1",
     "koishi-plugin-desktop": "^1.0.0",
     "koishi-plugin-puppeteer": "^3.9.0",
