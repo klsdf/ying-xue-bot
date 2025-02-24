@@ -13,6 +13,7 @@ interface GameQuestion {
   question_title: string
   question_content: string
   answer: string[]
+  upload_user_id: string
 }
 declare module 'koishi' {
   interface Tables {
@@ -36,6 +37,21 @@ declare module 'koishi' {
     game_user_data: GameUserData
   }
 }
+
+
+interface GameRecommend {
+  id: number
+  title: string
+  content: string
+  upload_user_id: string
+}
+declare module 'koishi' {
+  interface Tables {
+    game_recommend: GameRecommend
+  }
+}
+
+
 
 export const name = 'yingxue-core'
 
@@ -91,12 +107,13 @@ export function apply(ctx: Context) {
 
   const myId = "90455E4B9AC248C2DE4BE5388C58495B"
   const 雌小鬼Id = "24CC4328F64BB168175B99C247D3283C"
+  const 风铃花id = "5996876310066469677"
 
   ctx.on("message", (session) => {
     if (session.content.includes("亲亲")) {
 
       if (session.userId === myId) {
-        session.send("检测到主人说话！亲亲！")
+        session.send("主人！亲亲！")
       } else if (session.userId === 雌小鬼Id) {
         session.send("不许亲亲！只有主人可以亲亲！打你！")
       } else {
@@ -171,45 +188,42 @@ export function apply(ctx: Context) {
     autoInc: true,
   })
 
-  // 创建新的用户数据
-  // const newGameData: GameUserData = {
-  //   userid: 1,
-  //   name: '萤雪',
-  //   score: 0,
-  //   last_ask_question_date: new Date().toISOString(),
-  //   // 其他字段的值...
-  // }
 
   ctx.model.extend('gamequestion', {
     id: { type: 'integer' },
     question_title: 'string',
     question_content: 'string',
     answer: { type: 'list' },
+    upload_user_id: 'string',
   }, {
     primary: 'id',
     autoInc: true,
   })
 
-  // ctx.command("创建数据库").action(async (Argv) => {
-  //   await ctx.database.create('game_user_data', {
-  //     id: 1,
-  //     name: '萤雪',
-  //     score: 0,
-  //     last_ask_question_date: new Date().toISOString(),
-  //   })
-  //   return "创建数据库成功"
-  // })
-
-  // ctx.command("查询数据库").action(async (Argv) => {
-  //   let select = await ctx.database.get('game_user_data', {})
-  //   console.log(select)
-  //   return `查询成功:${select[0].name}`
-  // })
+  ctx.model.extend('game_recommend', {
+    id: { type: 'integer' },
+    title: 'string',
+    content: 'string',
+    upload_user_id: 'string',
+  }, {
+    primary: 'id',
+    autoInc: true,
+  })
 
 
   ctx.command("帮助").action(async (Argv) => {
     return `
-    
+    您好，这里是萤雪，一个擅长游戏设计和游戏开发的文学少女！
+    您可以输入以下的指令与小女子进行互动：
+    1. 帮助：查看帮助信息。
+    2. 游戏小知识问答，您可以回答其他用户的问题并赚取得分！
+    3. 查询我的数据：查询您的账户信息。
+    4. 我要出题目：您可以出题目让其他用户回答。
+    5. 分数排行榜：查看当前分数排行榜。
+    6. 我的题目：查看您出的题目。
+
+    7.每日游戏推荐：查看每日的推荐游戏！
+    8.投稿每日推荐：投稿您喜欢的游戏，小女子会进行审核并添加到每日推荐中！
     `
   })
 
@@ -221,7 +235,7 @@ export function apply(ctx: Context) {
    * @param session 
    * @returns 
    */
-  async function checkUser(ctx: Context, session: Session) {
+  async function checkAndRegisteUser(ctx: Context, session: Session) {
     let userId = session.userId
     let select = await ctx.database.get('game_user_data', { userid: userId })
     if (select.length === 0) {
@@ -238,24 +252,99 @@ export function apply(ctx: Context) {
         last_ask_question_date: new Date().toISOString(),
       })
       await session.send("注册成功！")
+      return;
+    }else
+    {
+      console.log("用户存在")
+      return;
     }
   }
 
 
+  async function getUserById(userId: string) {
+    let select = await ctx.database.get('game_user_data', { userid: userId })
+    if (select.length === 0) {
+      return null
+    }
+    return select[0]
+  }
+
+
   ctx.command("查询我的数据").action(async ({ session }) => {
-    await checkUser(ctx, session)
-    let select = await ctx.database.get('game_user_data', { userid: session.userId })
-    return `查询成功:${select[0].name}的积分为:${select[0].score}`
+    await checkAndRegisteUser(ctx, session)
+    let user = await getUserById(session.userId)
+    let questions = await ctx.database.get("gamequestion", {upload_user_id: user.userid})
+    let questionNum = questions.length
+    let recommend = await ctx.database.get('game_recommend', {})
+    let recommendNum = recommend.length 
+    return `查询成功:${user.name}的积分为:${user.score}
+    您出的题目数量为:${questionNum}，如需查询您的题目，请@小女子并输入“我的题目”
+    您投稿的游戏数量为:${recommendNum}，如需查询您的投稿，请@小女子并输入“我的投稿”`
+  })
+
+  ctx.command("我的投稿").action(async ({ session }) => {
+    let user = await getUserById(session.userId)
+    let recommend = await ctx.database.get('game_recommend', {upload_user_id: user.userid})
+    return `您投稿的游戏为：\n${recommend.map(recommend => `${recommend.title}\n${recommend.content}`).join('\n')}`
+  })
+
+  ctx.command("我的题目").action(async ({ session }) => {
+    let user = await getUserById(session.userId)
+    let questions = await ctx.database.get("gamequestion", {upload_user_id: user.userid})
+    return `您出的题目为：\n${questions.map(question => `${question.question_title}\n${question.question_content}\n答案为：${question.answer}`).join('\n')}`
+  })
+
+  ctx.command("我要出题目").action(async ({ session }) => {
+    await checkAndRegisteUser(ctx, session)
+    let user = await getUserById(session.userId)
+
+    await session.send(`欢迎${user.name}来到出题环节！请艾特小女子并在30秒内输入您的题目标题！`)
+    let question_title = await session.prompt(30 * 1000);
+    await session.send(`请输入您的题目内容!`)
+    let question_content = await session.prompt(30 * 1000);
+    await session.send(`请输入您的答案!`)
+    let answer = await session.prompt(30 * 1000);
+
+    await ctx.database.create('gamequestion', {
+      question_title: question_title,
+      question_content: question_content,
+      answer: [answer],
+      upload_user_id: user.userid,
+    })
+    return `出题成功！您出的题目为：\n${question_title}\n${question_content}\n答案为：${answer}`
+  })
+
+  ctx.command("每日游戏推荐").action(async ({ session }) => {
+    try{
+      let recommend = await ctx.database.get('game_recommend', {})
+      let randomRecommend = recommend[Math.floor(Math.random() * recommend.length)]
+      return `今日推荐：\n${randomRecommend.title}\n${randomRecommend.content}`
+    }catch(error){
+      return `哎呀~这里信号有些不太好~待会再试哦~`
+    }
+  })
+
+  ctx.command("投稿每日推荐游戏").action(async ({ session }) => {
+    await checkAndRegisteUser(ctx, session)
+    let user = await getUserById(session.userId)
+    await session.send(`欢迎${user.name}来到投稿环节！请艾特小女子并在30秒内输入您的推荐的游戏名！`)
+    let title = await session.prompt(30 * 1000);
+    await session.send(`请输入您的推荐理由！`)
+    let content = await session.prompt(30 * 1000);
+    await ctx.database.create('game_recommend', {
+      title: title,
+      content: content,
+      upload_user_id: user.userid,
+    })
+    return `投稿成功！\n您推荐的游戏为：\n${title}\n理由为：\n${content}`
   })
 
   ctx.command("游戏小知识问答").action(async ({ session }) => {
     //检测是否存在用户
 
-    await checkUser(ctx, session)
-    let select = await ctx.database.get('game_user_data', { userid: session.userId })
-    console.log("select:", select)
+    await checkAndRegisteUser(ctx, session)    
+    let user = await getUserById(session.userId)
 
-    const user = select[0];
     await session.send(`欢迎${user.name}来到游戏小知识问答！接下来，小女子会提出一个游戏小知识，请您在30秒内@我并回答答案。`)
     let questions = await ctx.database.get('gamequestion', {})
     //从问题中随机拿一个
@@ -277,6 +366,11 @@ export function apply(ctx: Context) {
       await session.send(`回答错误！正确答案为:${randomQuestion.answer[0]}或${randomQuestion.answer[1]}`)
     }
 
+  })
+
+  ctx.command("分数排行榜").action(async ({ session }) => {
+    let select = await ctx.database.select('game_user_data', {}).orderBy('score', 'desc').limit(10).execute()
+    return `排行榜：\n${select.map(user => `${user.name}:${user.score}`).join('\n')}`
   })
 
 
@@ -403,10 +497,10 @@ export function apply(ctx: Context) {
   //       return ``
   //     })
 
-  //   ctx.middleware((session, next) => {
-  //     console.log(`${session.userId}说了:${session.content}`)
-  //     return next()
-  //   })
+    ctx.middleware((session, next) => {
+      console.log(`${session.userId}说了:${session.content}`)
+      return next()
+    })
 
   // ctx.user('1796655849').on('message', (session) => {
   //   console.log(session.content)

@@ -34,4 +34,3 @@ tsconfig.tsbuildinfo
 *.njsproj
 *.sln
 data/telemetry.json
-data/koishi.db
