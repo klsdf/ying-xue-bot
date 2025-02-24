@@ -1,4 +1,4 @@
-import { Command, Context, Schema, h } from 'koishi'
+import { Command, Context, Schema, h, Session } from 'koishi'
 import { pathToFileURL } from 'url'
 import path from 'path'
 
@@ -88,7 +88,7 @@ export function apply(ctx: Context) {
   // const testChannelId = "541042950825E06BFC0DC7698D84A86D"
 
 
-  
+
   const myId = "90455E4B9AC248C2DE4BE5388C58495B"
   const 雌小鬼Id = "24CC4328F64BB168175B99C247D3283C"
 
@@ -125,29 +125,29 @@ export function apply(ctx: Context) {
   // })
 
 
-  ctx.command('来点小知识 <name>').action(async (Argv, name) => {
+  // ctx.command('来点小知识 <name>').action(async (Argv, name) => {
 
-    if (name === "") {
-      return `本指令需要在指令后方传入参数哦~比如:来点小知识 c#`
-    }
+  //   if (name === "") {
+  //     return `本指令需要在指令后方传入参数哦~比如:来点小知识 c#`
+  //   }
 
-    if (name === "c#") {
-      return `c#是一种编程语言，它是一种静态类型、编译型的编程语言。`
-    }
-    if (name === "javascript") {
-      return `javascript是一种编程语言，它是一种动态类型、解释型的编程语言。`
-    }
-    if (name === "c") {
-      return `c是一种编程语言，它是一种静态类型、编译型的编程语言。`
-    }
-    if (name === "python") {
-      return `python是一种编程语言，它是一种动态类型、解释型的编程语言。`
-    }
-    if (name === "java") {
-      return `java是一种编程语言，它是一种静态类型、编译型的编程语言。`
-    }
+  //   if (name === "c#") {
+  //     return `c#是一种编程语言，它是一种静态类型、编译型的编程语言。`
+  //   }
+  //   if (name === "javascript") {
+  //     return `javascript是一种编程语言，它是一种动态类型、解释型的编程语言。`
+  //   }
+  //   if (name === "c") {
+  //     return `c是一种编程语言，它是一种静态类型、编译型的编程语言。`
+  //   }
+  //   if (name === "python") {
+  //     return `python是一种编程语言，它是一种动态类型、解释型的编程语言。`
+  //   }
+  //   if (name === "java") {
+  //     return `java是一种编程语言，它是一种静态类型、编译型的编程语言。`
+  //   }
 
-  })
+  // })
 
   // ctx.command("数据库查询测试").action(async (Argv) => {
   //   let select = await ctx.database.get('gamequestion',{})
@@ -200,36 +200,36 @@ export function apply(ctx: Context) {
   //   return "创建数据库成功"
   // })
 
-  ctx.command("查询数据库").action(async (Argv) => {
-    let select = await ctx.database.get('game_user_data', {})
-    console.log(select)
-    return `查询成功:${select[0].name}`
+  // ctx.command("查询数据库").action(async (Argv) => {
+  //   let select = await ctx.database.get('game_user_data', {})
+  //   console.log(select)
+  //   return `查询成功:${select[0].name}`
+  // })
+
+
+  ctx.command("帮助").action(async (Argv) => {
+    return `
+    
+    `
   })
 
 
-  ctx.command("查询我的数据").action(async ({ session }) => {
+
+  /**
+   * 检查用户是否存在
+   * @param ctx 
+   * @param session 
+   * @returns 
+   */
+  async function checkUser(ctx: Context, session: Session) {
     let userId = session.userId
-    console.log("userId:", userId)
     let select = await ctx.database.get('game_user_data', { userid: userId })
     if (select.length === 0) {
-      return `没有查询到您的信息哦~您还没有注册呢？请先注册哦！请在30秒内@我并输入您的用户名来注册一个账户吧！`
-    }
-    console.log("select:", select)
-    return `查询成功:${select[0].name}的积分为:${select[0].score}`
-  })
-
-  ctx.command("游戏小知识问答").action(async ({ session }) => {
-    //检测是否存在用户
-
-    let userId = session.userId
-    let select = await ctx.database.get('game_user_data', {userid:userId})
-
-    console.log("select:", select)
-    if (select.length === 0) {
-      await session.send("您还没有注册，请先注册哦！请在30秒内@我并输入您的用户名来注册一个账户吧！")
+      await session.send("没有查询到您的信息哦~您是不是还没有注册呢？请先注册哦！请在30秒内@我并输入您的用户名来注册一个账户吧！")
       let name = await session.prompt(30 * 10000);
       if (name == null) {
-        return "注册超时！"
+        await session.send("注册超时！")
+        return;
       }
       await ctx.database.create('game_user_data', {
         userid: userId,
@@ -238,28 +238,43 @@ export function apply(ctx: Context) {
         last_ask_question_date: new Date().toISOString(),
       })
       await session.send("注册成功！")
+    }
+  }
+
+
+  ctx.command("查询我的数据").action(async ({ session }) => {
+    await checkUser(ctx, session)
+    let select = await ctx.database.get('game_user_data', { userid: session.userId })
+    return `查询成功:${select[0].name}的积分为:${select[0].score}`
+  })
+
+  ctx.command("游戏小知识问答").action(async ({ session }) => {
+    //检测是否存在用户
+
+    await checkUser(ctx, session)
+    let select = await ctx.database.get('game_user_data', { userid: session.userId })
+    console.log("select:", select)
+
+    const user = select[0];
+    await session.send(`欢迎${user.name}来到游戏小知识问答！接下来，小女子会提出一个游戏小知识，请您在30秒内@我并回答答案。`)
+    let questions = await ctx.database.get('gamequestion', {})
+    //从问题中随机拿一个
+    let randomQuestion = questions[Math.floor(Math.random() * questions.length)]
+    await session.send(`请问：\n${randomQuestion.question_title}\n${randomQuestion.question_content}`)
+
+    let answer = await session.prompt(30 * 1000);
+
+    if (answer == null) {
+      return "回答超时！"
+    }
+
+    if (answer.includes(randomQuestion.answer[0]) || answer.includes(randomQuestion.answer[1])) {
+      let score = user.score + 1
+      await ctx.database.set('game_user_data', { userid: session.userId }, { score: score })
+
+      await session.send(`回答正确！您的分数+1，现在为${score}分`)
     } else {
-      const user = select[0];
-      await session.send(`欢迎${user.name}来到游戏小知识问答！接下来，小女子会提出一个游戏小知识，请您在30秒内@我并回答答案。`)
-      let questions = await ctx.database.get('gamequestion', {})
-      //从问题中随机拿一个
-      let randomQuestion = questions[Math.floor(Math.random() * questions.length)]
-      await session.send(`请问：\n${randomQuestion.question_title}\n${randomQuestion.question_content}`)
-
-      let answer = await session.prompt(30 * 1000);
-
-      if (answer == null) {
-        return "回答超时！"
-      }
-
-      if (answer.includes(randomQuestion.answer[0]) || answer.includes(randomQuestion.answer[1])) {
-        let score = user.score + 1
-        await ctx.database.set('game_user_data', {userid:user.userid}, {score:score})
-
-        await session.send(`回答正确！您的分数+1，现在为${score}分`)
-      } else {
-        await session.send(`回答错误！正确答案为:${randomQuestion.answer[0]}或${randomQuestion.answer[1]}`)
-      }
+      await session.send(`回答错误！正确答案为:${randomQuestion.answer[0]}或${randomQuestion.answer[1]}`)
     }
 
   })
