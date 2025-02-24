@@ -93,3 +93,6 @@ plugins:
   yingxue-core:830jit: {}
   cron:bxf8gn: {}
   puppeteer:ngihuq: {}
+prefix:
+  - null
+  - /
